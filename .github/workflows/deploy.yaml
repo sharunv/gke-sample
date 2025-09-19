@@ -15,7 +15,7 @@ env:
   CLUSTER_LOCATION: us-central1-a
   NAMESPACE: production
   AR_LOCATION: us-central1
-  AR_REPO: microrepo
+  AR_REPO: artirepo
   IMAGE_NAME: sample-app
 
 jobs:

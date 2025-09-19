@@ -9,16 +9,15 @@ permissions:
   contents: read
   id-token: write
 
+env:
+  PROJECT_ID: project-gcp-468607
+  AR_LOCATION: us-central1            # region of Artifact Registry
+  AR_REPO: artirepo
+  IMAGE_NAME: sample-app
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    
-    env:
-      REGISTRY: us-central1-docker.pkg.dev
-      PROJECT_ID: project-gcp-468607
-      REPO_NAME: microrepo
-      IMAGE_NAME: sample-app
-      FULL_IMAGE_NAME: us-central1-docker.pkg.dev/project-gcp-468607/microrepo/sample-app
 
     steps:
       - name: Checkout
@@ -28,22 +27,16 @@ jobs:
         name: 'Authenticate to GCP (Workload Identity)'
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: 'projects/237760814620/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
-          service_account: 'github-actions-sa@project-gcp-468607.iam.gserviceaccount.com'
+          workload_identity_provider: 'projects/237760814620/locations/global/workloadIdentityPools/github-pool/providers/github-provider' # REPLACE with WIF_PROVIDER
+          service_account: 'github-actions-sa@project-gcp-468607.iam.gserviceaccount.com' # REPLACE with SA_EMAIL
           token_format: 'access_token'
-          project_id: project-gcp-468607
+          project_id: ${{ env.PROJECT_ID }}
 
-      - name: Debug all variables
+      - name: "Configure registry variables"
         run: |
-          echo "REGISTRY: ${{ env.REGISTRY }}"
-          echo "PROJECT_ID: ${{ env.PROJECT_ID }}"  
-          echo "REPO_NAME: ${{ env.REPO_NAME }}"
-          echo "IMAGE_NAME: ${{ env.IMAGE_NAME }}"
-          echo "FULL_IMAGE_NAME: ${{ env.FULL_IMAGE_NAME }}"
-          echo "Github SHA: ${{ github.sha }}"
-          echo "Expected tags:"
-          echo "  - ${{ env.FULL_IMAGE_NAME }}:${{ github.sha }}"
-          echo "  - ${{ env.FULL_IMAGE_NAME }}:latest"
+          echo "REGISTRY=${{ env.AR_LOCATION }}-docker.pkg.dev" >> $GITHUB_ENV
+          echo "IMAGE=${{ env.AR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
+
 
       - name: Login to Artifact Registry (Docker)
         uses: docker/login-action@v3
@@ -58,17 +51,11 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ env.FULL_IMAGE_NAME }}:${{ github.sha }}
-            ${{ env.FULL_IMAGE_NAME }}:latest
-          cache-from: type=registry,ref=${{ env.FULL_IMAGE_NAME }}:latest
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:latest
+          cache-from: type=registry,ref=${{ env.IMAGE }}:latest
           cache-to: type=inline
 
       - name: Set image-tag output
         id: settag
-        run: echo "image=${{ env.FULL_IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_OUTPUT
-
-      - name: Output final image
-        run: |
-          echo "Successfully built and pushed:"
-          echo "${{ env.FULL_IMAGE_NAME }}:${{ github.sha }}"
-          echo "${{ env.FULL_IMAGE_NAME }}:latest"
+        run: echo "::set-output name=image::${{ env.IMAGE }}:${{ github.sha }}"
