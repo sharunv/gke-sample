@@ -34,9 +34,12 @@ jobs:
 
       - name: "Configure registry variables"
         run: |
-          echo "REGISTRY=${{ env.AR_LOCATION }}-docker.pkg.dev" >> $GITHUB_ENV
-          echo "IMAGE=${{ env.AR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
-
+          REGISTRY="${{ env.AR_LOCATION }}-docker.pkg.dev"
+          IMAGE="${REGISTRY}/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}/${{ env.IMAGE_NAME }}"
+          echo "REGISTRY=${REGISTRY}" >> $GITHUB_ENV
+          echo "IMAGE=${IMAGE}" >> $GITHUB_ENV
+          echo "DEBUG: REGISTRY=${REGISTRY}"
+          echo "DEBUG: IMAGE=${IMAGE}"
 
       - name: Login to Artifact Registry (Docker)
         uses: docker/login-action@v3
