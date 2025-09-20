@@ -1,7 +1,7 @@
 replicaCount: 2
 
 image:
-  repository: us-central1-docker.pkg.dev/project-gcp-468607/microrepo/sample-app:${GITHUB_SHA}
+  repository: us-central1-docker.pkg.dev/project-gcp-468607/artirepo/sample-app:${GITHUB_SHA}
   tag: "latest"
   pullPolicy: IfNotPresent
 
