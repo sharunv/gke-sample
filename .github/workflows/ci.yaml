@@ -40,8 +40,8 @@ jobs:
 
       - name: Build and push image
         run: |
-          docker build -t ${{ env.AR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
-          docker push ${{ env.AR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker build -t us-central1-docker.pkg.dev/project-gcp-468607/artirepo/sample-app:${{ github.sha }} .
+          docker push us-central1-docker.pkg.dev/project-gcp-468607/artirepo/sample-app:${{ github.sha }}
 
       - name: Get GKE credentials
         run: |
