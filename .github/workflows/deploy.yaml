@@ -1,4 +1,4 @@
-name: CD - deploy to GKE (staging/prod)
+name: CI/CD - Build and Deploy to GKE
 
 on:
   push:
@@ -19,7 +19,7 @@ env:
   IMAGE_NAME: sample-app
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -29,9 +29,29 @@ jobs:
         name: Authenticate to GCP (Workload Identity)
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: 'projects/237760814620/locations/global/workloadIdentityPools/github-pool-2/providers/github-provider' # replace
-          service_account: 'github-actions-sa@project-gcp-468607.iam.gserviceaccount.com' # replace
+          workload_identity_provider: 'projects/237760814620/locations/global/workloadIdentityPools/github-pool-2/providers/github-provider'
+          service_account: 'github-actions-sa@project-gcp-468607.iam.gserviceaccount.com'
           project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure Docker to use gcloud as credential helper
+        run: |
+          gcloud auth configure-docker ${{ env.AR_LOCATION }}-docker.pkg.dev
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        env:
+          IMAGE_URI: ${{ env.AR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}/${{ env.IMAGE_NAME }}
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE_URI }}:${{ github.sha }}
+            ${{ env.IMAGE_URI }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - id: getcreds
         name: Get GKE credentials
@@ -51,6 +71,7 @@ jobs:
         run: |
           # ensure namespace exists
           kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+          
           # helm upgrade (pass image tag so chart is immutable)
           helm upgrade --install sample-app charts/sample-app \
             --namespace $NAMESPACE \
