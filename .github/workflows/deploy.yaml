@@ -73,7 +73,7 @@ jobs:
           kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
           
           # helm upgrade (pass image tag so chart is immutable)
-          helm upgrade --install sample-app charts/sample-app \
+          helm upgrade --install app charts/sample-app \
             --namespace $NAMESPACE \
             --set image.repository=${IMAGE} \
             --set image.tag=${IMAGE_TAG} \
